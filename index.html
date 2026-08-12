@@ -9,13 +9,15 @@
     content="width=device-width, initial-scale=1.0"
 >
 
-<title>MH</title>
+<title>Music Horn</title>
+
 
 <style>
 
 * {
     box-sizing: border-box;
 }
+
 
 body {
 
@@ -78,6 +80,22 @@ body {
         rgba(0,0,0,.55);
 
     text-align: center;
+
+}
+
+
+/* ==========================================
+   タイトル
+========================================== */
+
+h1 {
+
+    margin:
+        0 0 30px;
+
+    font-size: 30px;
+
+    letter-spacing: 3px;
 
 }
 
@@ -146,11 +164,6 @@ body {
         transform .08s,
         filter .08s,
         background .08s;
-
-    /*
-        スマホで長押ししたときの
-        メニューなどを防ぐ
-    */
 
     user-select: none;
 
@@ -234,6 +247,9 @@ body {
 <div class="app">
 
 
+    <h1>
+        🚆 MUSIC HORN
+    </h1>
 
 
     <div
@@ -255,23 +271,33 @@ body {
 </div>
 
 
-<!-- ==========================================
-     音声ファイル
-========================================== -->
-
-<audio
-    id="hornSound"
-    src="sounds/horn.mp3"
-    preload="auto"
-></audio>
-
-
 <script>
 
-const horn =
-    document.getElementById(
-        "hornSound"
-    );
+
+/* ==========================================
+   設定
+========================================== */
+
+const SOUND_FILE =
+    "sounds/horn.mp3";
+
+
+/* ==========================================
+   Web Audio
+========================================== */
+
+let audioContext = null;
+
+let audioBuffer = null;
+
+let sourceNode = null;
+
+let isPressed = false;
+
+
+/* ==========================================
+   HTML要素
+========================================== */
 
 const button =
     document.getElementById(
@@ -284,83 +310,244 @@ const status =
     );
 
 
-let pressed = false;
-
-
 /* ==========================================
-   再生
+   AudioContext準備
 ========================================== */
 
-function startHorn() {
+function getAudioContext() {
 
-    /*
-        二重実行防止
-    */
+    if (!audioContext) {
 
-    if (pressed) {
-        return;
+        audioContext =
+            new (
+                window.AudioContext ||
+                window.webkitAudioContext
+            )();
+
     }
 
-    pressed = true;
-
-
-    /*
-        最初から再生
-    */
-
-    horn.currentTime = 0;
-
-
-    horn.play()
-        .then(() => {
-
-            button.classList.add(
-                "pressed"
-            );
-
-            status.classList.add(
-                "playing"
-            );
-
-            status.textContent =
-                "● 吹鳴中";
-
-        })
-        .catch(error => {
-
-            console.error(error);
-
-            pressed = false;
-
-            status.textContent =
-                "音声ファイルを確認してください";
-
-        });
+    return audioContext;
 
 }
 
 
 /* ==========================================
-   停止
+   音声ファイルをメモリへ読み込む
+========================================== */
+
+async function loadSound() {
+
+    if (audioBuffer) {
+
+        return true;
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                SOUND_FILE
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "音声ファイルを読み込めません"
+            );
+
+        }
+
+
+        const arrayBuffer =
+            await response.arrayBuffer();
+
+
+        const ctx =
+            getAudioContext();
+
+
+        audioBuffer =
+            await ctx.decodeAudioData(
+                arrayBuffer
+            );
+
+
+        return true;
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        status.textContent =
+            "音声ファイルを確認してください";
+
+        return false;
+
+    }
+
+}
+
+
+/* ==========================================
+   ホーン開始
+========================================== */
+
+async function startHorn() {
+
+    if (isPressed) {
+
+        return;
+
+    }
+
+
+    isPressed = true;
+
+
+    button.classList.add(
+        "pressed"
+    );
+
+
+    status.classList.add(
+        "playing"
+    );
+
+    status.textContent =
+        "● 吹鳴中";
+
+
+    const ctx =
+        getAudioContext();
+
+
+    /*
+        iPhone / iPadなどで
+        AudioContextが停止状態の場合
+        ここで復帰
+    */
+
+    if (
+        ctx.state ===
+        "suspended"
+    ) {
+
+        await ctx.resume();
+
+    }
+
+
+    /*
+        音声がまだ読み込まれていない場合
+        読み込む
+    */
+
+    const loaded =
+        await loadSound();
+
+
+    if (!loaded) {
+
+        stopHorn();
+
+        return;
+
+    }
+
+
+    /*
+        念のため既存音声を停止
+    */
+
+    if (sourceNode) {
+
+        try {
+
+            sourceNode.stop();
+
+        }
+
+        catch (e) {}
+
+    }
+
+
+    /*
+        新しい再生ノード
+    */
+
+    sourceNode =
+        ctx.createBufferSource();
+
+
+    sourceNode.buffer =
+        audioBuffer;
+
+
+    sourceNode.connect(
+        ctx.destination
+    );
+
+
+    /*
+        即時再生
+    */
+
+    sourceNode.start(
+        0
+    );
+
+}
+
+
+/* ==========================================
+   ホーン停止
 ========================================== */
 
 function stopHorn() {
 
-    if (!pressed) {
+    if (!isPressed) {
+
         return;
+
     }
 
-    pressed = false;
+
+    isPressed = false;
 
 
-    horn.pause();
+    /*
+        音声停止
+    */
 
-    horn.currentTime = 0;
+    if (sourceNode) {
 
+        try {
+
+            sourceNode.stop();
+
+        }
+
+        catch (e) {}
+
+        sourceNode = null;
+
+    }
+
+
+    /*
+        UI
+    */
 
     button.classList.remove(
         "pressed"
     );
+
 
     status.classList.remove(
         "playing"
@@ -399,11 +586,6 @@ button.addEventListener(
     }
 );
 
-
-/*
-    ボタンの外へマウスを
-    持っていった場合も停止
-*/
 
 button.addEventListener(
     "mouseleave",
@@ -465,7 +647,7 @@ button.addEventListener(
 
 
 /* ==========================================
-   マウスがウィンドウ外へ出た場合
+   ウィンドウからフォーカスが外れた
 ========================================== */
 
 window.addEventListener(
@@ -479,8 +661,7 @@ window.addEventListener(
 
 
 /* ==========================================
-   キーボード
-   スペースを押している間だけ吹鳴
+   スペースキー
 ========================================== */
 
 document.addEventListener(
@@ -495,6 +676,7 @@ document.addEventListener(
 
         }
 
+
         if (
             event.repeat
         ) {
@@ -502,6 +684,7 @@ document.addEventListener(
             return;
 
         }
+
 
         event.preventDefault();
 
@@ -522,6 +705,7 @@ document.addEventListener(
             return;
 
         }
+
 
         event.preventDefault();
 
