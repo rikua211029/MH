@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>MH</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+
+    margin: 0;
+
+    min-height: 100vh;
+
+    font-family:
+        "Yu Gothic",
+        "Meiryo",
+        sans-serif;
+
+    color: white;
+
+    background:
+        radial-gradient(
+            circle at top,
+            #263e52,
+            #111b25 45%,
+            #05080c
+        );
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    padding: 20px;
+
+}
+
+
+/* ==========================================
+   メイン
+========================================== */
+
+.app {
+
+    width: 100%;
+
+    max-width: 700px;
+
+    background:
+        rgba(255,255,255,.07);
+
+    border:
+        1px solid
+        rgba(255,255,255,.15);
+
+    border-radius: 25px;
+
+    padding: 35px;
+
+    backdrop-filter:
+        blur(18px);
+
+    box-shadow:
+        0 25px 80px
+        rgba(0,0,0,.55);
+
+    text-align: center;
+
+}
+
+
+/* ==========================================
+   ステータス
+========================================== */
+
+.status {
+
+    margin-bottom: 20px;
+
+    color: #8997a3;
+
+    font-size: 14px;
+
+}
+
+.status.playing {
+
+    color: #62ddff;
+
+}
+
+
+/* ==========================================
+   ボタン
+========================================== */
+
+.horn-button {
+
+    width: 100%;
+
+    min-height: 160px;
+
+    border: none;
+
+    border-radius: 25px;
+
+    cursor: pointer;
+
+    color: white;
+
+    font-size: 28px;
+
+    font-weight: bold;
+
+    letter-spacing: 3px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #1596c7,
+            #075678
+        );
+
+    box-shadow:
+
+        0 12px 35px
+        rgba(0,0,0,.4),
+
+        inset 0 1px
+        rgba(255,255,255,.2);
+
+    transition:
+        transform .08s,
+        filter .08s,
+        background .08s;
+
+    /*
+        スマホで長押ししたときの
+        メニューなどを防ぐ
+    */
+
+    user-select: none;
+
+    -webkit-user-select: none;
+
+    -webkit-touch-callout: none;
+
+    touch-action: none;
+
+}
+
+
+.horn-button:hover {
+
+    filter:
+        brightness(1.1);
+
+}
+
+
+.horn-button:active,
+.horn-button.pressed {
+
+    transform:
+        scale(.97);
+
+    background:
+        linear-gradient(
+            145deg,
+            #20bde8,
+            #087795
+        );
+
+    box-shadow:
+
+        0 0 45px
+        rgba(40,210,255,.4),
+
+        inset 0 2px
+        rgba(255,255,255,.2);
+
+}
+
+
+/* ==========================================
+   スマホ
+========================================== */
+
+@media(max-width:600px) {
+
+    .app {
+
+        padding: 20px;
+
+    }
+
+    h1 {
+
+        font-size: 24px;
+
+    }
+
+    .horn-button {
+
+        min-height: 130px;
+
+        font-size: 21px;
+
+    }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="app">
+
+
+
+
+    <div
+        class="status"
+        id="status"
+    >
+        READY
+    </div>
+
+
+    <button
+        class="horn-button"
+        id="hornButton"
+    >
+        📯 押している間だけ吹鳴
+    </button>
+
+
+</div>
+
+
+<!-- ==========================================
+     音声ファイル
+========================================== -->
+
+<audio
+    id="hornSound"
+    src="sounds/horn.mp3"
+    preload="auto"
+></audio>
+
+
+<script>
+
+const horn =
+    document.getElementById(
+        "hornSound"
+    );
+
+const button =
+    document.getElementById(
+        "hornButton"
+    );
+
+const status =
+    document.getElementById(
+        "status"
+    );
+
+
+let pressed = false;
+
+
+/* ==========================================
+   再生
+========================================== */
+
+function startHorn() {
+
+    /*
+        二重実行防止
+    */
+
+    if (pressed) {
+        return;
+    }
+
+    pressed = true;
+
+
+    /*
+        最初から再生
+    */
+
+    horn.currentTime = 0;
+
+
+    horn.play()
+        .then(() => {
+
+            button.classList.add(
+                "pressed"
+            );
+
+            status.classList.add(
+                "playing"
+            );
+
+            status.textContent =
+                "● 吹鳴中";
+
+        })
+        .catch(error => {
+
+            console.error(error);
+
+            pressed = false;
+
+            status.textContent =
+                "音声ファイルを確認してください";
+
+        });
+
+}
+
+
+/* ==========================================
+   停止
+========================================== */
+
+function stopHorn() {
+
+    if (!pressed) {
+        return;
+    }
+
+    pressed = false;
+
+
+    horn.pause();
+
+    horn.currentTime = 0;
+
+
+    button.classList.remove(
+        "pressed"
+    );
+
+    status.classList.remove(
+        "playing"
+    );
+
+    status.textContent =
+        "READY";
+
+}
+
+
+/* ==========================================
+   マウス
+========================================== */
+
+button.addEventListener(
+    "mousedown",
+    event => {
+
+        event.preventDefault();
+
+        startHorn();
+
+    }
+);
+
+
+button.addEventListener(
+    "mouseup",
+    event => {
+
+        event.preventDefault();
+
+        stopHorn();
+
+    }
+);
+
+
+/*
+    ボタンの外へマウスを
+    持っていった場合も停止
+*/
+
+button.addEventListener(
+    "mouseleave",
+    () => {
+
+        stopHorn();
+
+    }
+);
+
+
+/* ==========================================
+   タッチ
+========================================== */
+
+button.addEventListener(
+    "touchstart",
+    event => {
+
+        event.preventDefault();
+
+        startHorn();
+
+    },
+    {
+        passive: false
+    }
+);
+
+
+button.addEventListener(
+    "touchend",
+    event => {
+
+        event.preventDefault();
+
+        stopHorn();
+
+    },
+    {
+        passive: false
+    }
+);
+
+
+button.addEventListener(
+    "touchcancel",
+    event => {
+
+        event.preventDefault();
+
+        stopHorn();
+
+    },
+    {
+        passive: false
+    }
+);
+
+
+/* ==========================================
+   マウスがウィンドウ外へ出た場合
+========================================== */
+
+window.addEventListener(
+    "blur",
+    () => {
+
+        stopHorn();
+
+    }
+);
+
+
+/* ==========================================
+   キーボード
+   スペースを押している間だけ吹鳴
+========================================== */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.code !== "Space"
+        ) {
+
+            return;
+
+        }
+
+        if (
+            event.repeat
+        ) {
+
+            return;
+
+        }
+
+        event.preventDefault();
+
+        startHorn();
+
+    }
+);
+
+
+document.addEventListener(
+    "keyup",
+    event => {
+
+        if (
+            event.code !== "Space"
+        ) {
+
+            return;
+
+        }
+
+        event.preventDefault();
+
+        stopHorn();
+
+    }
+);
+
+</script>
+
+
+</body>
+</html>
