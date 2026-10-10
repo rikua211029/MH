@@ -1,721 +1,442 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-
 <meta charset="UTF-8">
-
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
->
-
-<title>Music Horn</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MUSIC HORN</title>
 
 <style>
-
-* {
-    box-sizing: border-box;
-}
-
-
-body {
-
-    margin: 0;
-
-    min-height: 100vh;
-
-    font-family:
-        "Yu Gothic",
-        "Meiryo",
-        sans-serif;
-
-    color: white;
-
-    background:
-        radial-gradient(
-            circle at top,
-            #263e52,
-            #111b25 45%,
-            #05080c
-        );
-
-    display: flex;
-
-    justify-content: center;
-
-    align-items: center;
-
-    padding: 20px;
-
-}
-
-
-/* ==========================================
-   メイン
-========================================== */
-
-.app {
-
-    width: 100%;
-
-    max-width: 700px;
-
-    background:
-        rgba(255,255,255,.07);
-
-    border:
-        1px solid
-        rgba(255,255,255,.15);
-
-    border-radius: 25px;
-
-    padding: 35px;
-
-    backdrop-filter:
-        blur(18px);
-
-    box-shadow:
-        0 25px 80px
-        rgba(0,0,0,.55);
-
-    text-align: center;
-
-}
-
-
-/* ==========================================
-   タイトル
-========================================== */
-
-h1 {
-
-    margin:
-        0 0 30px;
-
-    font-size: 30px;
-
-    letter-spacing: 3px;
-
-}
-
-
-/* ==========================================
-   ステータス
-========================================== */
-
-.status {
-
-    margin-bottom: 20px;
-
-    color: #8997a3;
-
-    font-size: 14px;
-
-}
-
-.status.playing {
-
-    color: #62ddff;
-
-}
-
-
-/* ==========================================
-   ボタン
-========================================== */
-
-.horn-button {
-
-    width: 100%;
-
-    min-height: 160px;
-
-    border: none;
-
-    border-radius: 25px;
-
-    cursor: pointer;
-
-    color: white;
-
-    font-size: 28px;
-
-    font-weight: bold;
-
-    letter-spacing: 3px;
-
-    background:
-        linear-gradient(
-            145deg,
-            #1596c7,
-            #075678
-        );
-
-    box-shadow:
-
-        0 12px 35px
-        rgba(0,0,0,.4),
-
-        inset 0 1px
-        rgba(255,255,255,.2);
-
-    transition:
-        transform .08s,
-        filter .08s,
-        background .08s;
-
-    user-select: none;
-
-    -webkit-user-select: none;
-
-    -webkit-touch-callout: none;
-
-    touch-action: none;
-
-}
-
-
-.horn-button:hover {
-
-    filter:
-        brightness(1.1);
-
-}
-
-
-.horn-button:active,
-.horn-button.pressed {
-
-    transform:
-        scale(.97);
-
-    background:
-        linear-gradient(
-            145deg,
-            #20bde8,
-            #087795
-        );
-
-    box-shadow:
-
-        0 0 45px
-        rgba(40,210,255,.4),
-
-        inset 0 2px
-        rgba(255,255,255,.2);
-
-}
-
-
-/* ==========================================
-   スマホ
-========================================== */
-
-@media(max-width:600px) {
-
-    .app {
-
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
         padding: 20px;
+        font-family: "Segoe UI", sans-serif;
+        color: #ffffff;
+        background:
+            radial-gradient(circle at top, #173c69 0%, #071629 55%, #030914 100%);
+    }
 
+    .container {
+        width: 100%;
+        max-width: 700px;
+        padding: 35px;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.13);
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(12px);
     }
 
     h1 {
+        margin: 0 0 12px;
+        font-size: clamp(28px, 6vw, 42px);
+        letter-spacing: 2px;
+    }
 
-        font-size: 24px;
+    .subtitle {
+        margin-bottom: 26px;
+        color: #b8cbe3;
+        font-size: 14px;
+    }
 
+    .status {
+        margin-bottom: 25px;
+        padding: 12px;
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.2);
+        color: #a9c2df;
+        font-weight: 600;
+    }
+
+    .status.playing {
+        color: #66e6ff;
+    }
+
+    .status.locked {
+        color: #ffce79;
+    }
+
+    .buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
     }
 
     .horn-button {
-
-        min-height: 130px;
-
+        width: 100%;
+        min-height: 100px;
+        padding: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 18px;
+        background: linear-gradient(135deg, #1685ed, #0752b5);
+        color: white;
         font-size: 21px;
-
+        font-weight: 700;
+        cursor: pointer;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: none;
+        transition: filter 0.12s, transform 0.12s, opacity 0.12s;
     }
 
-}
+    .horn-button.secondary {
+        background: linear-gradient(135deg, #7858e8, #4930a9);
+    }
 
+    .horn-button:active,
+    .horn-button.active {
+        filter: brightness(1.2);
+        transform: scale(0.985);
+    }
+
+    .horn-button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        transform: none;
+        filter: none;
+    }
+
+    .button-title {
+        display: block;
+    }
+
+    .key-hint {
+        display: block;
+        margin-top: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        opacity: 0.85;
+    }
+
+    .help {
+        margin-top: 22px;
+        color: #a9bfd8;
+        font-size: 13px;
+        line-height: 1.8;
+    }
+
+    @media (max-width: 480px) {
+        .container {
+            padding: 24px 18px;
+        }
+
+        .horn-button {
+            min-height: 90px;
+            font-size: 18px;
+        }
+    }
 </style>
-
 </head>
 
-
 <body>
+<div class="container">
+    <h1>MUSIC HORN</h1>
+    <div class="subtitle">PRESS AND HOLD</div>
 
+    <div id="status" class="status">READY</div>
 
-<div class="app">
+    <div class="buttons">
+        <button id="horn1Button" class="horn-button" type="button">
+            <span class="button-title">1つ目のホーン</span>
+            <span class="key-hint">押している間だけ鳴る / Backspace</span>
+        </button>
 
-
-    <h1>
-        MH
-    </h1>
-
-
-    <div
-        class="status"
-        id="status"
-    >
-        READY
+        <button id="horn2Button" class="horn-button secondary" type="button">
+            <span class="button-title">2つ目のホーン</span>
+            <span class="key-hint">離すと終了音 / B</span>
+        </button>
     </div>
 
-
-    <button
-        class="horn-button"
-        id="hornButton"
-    >
-        押している間だけ吹鳴
-    </button>
-
-
+    <div class="help">
+        ボタンまたは対応するキーを押している間、ホーンが鳴ります。<br>
+        2つ目は終了音が鳴り終わるまで再操作できません。
+    </div>
 </div>
 
-
 <script>
+"use strict";
 
+const SOUND_PATHS = {
+    horn1: "sounds/horn.mp3",
+    horn2: "sounds/horn2.mp3",
+    end: "sounds/end.mp3"
+};
 
-/* ==========================================
-   設定
-========================================== */
-
-const SOUND_FILE =
-    "sounds/horn.mp3";
-
-
-/* ==========================================
-   Web Audio
-========================================== */
+const statusElement = document.getElementById("status");
+const horn1Button = document.getElementById("horn1Button");
+const horn2Button = document.getElementById("horn2Button");
 
 let audioContext = null;
+let audioBuffers = {};
+let loadPromise = null;
 
-let audioBuffer = null;
+const horns = {
+    horn1: { pressed: false, source: null },
+    horn2: { pressed: false, source: null }
+};
 
-let sourceNode = null;
-
-let isPressed = false;
-
-
-/* ==========================================
-   HTML要素
-========================================== */
-
-const button =
-    document.getElementById(
-        "hornButton"
-    );
-
-const status =
-    document.getElementById(
-        "status"
-    );
-
-
-/* ==========================================
-   AudioContext準備
-========================================== */
+const heldKeys = new Set();
+let endSources = new Set();
 
 function getAudioContext() {
-
     if (!audioContext) {
+        const AudioContextClass =
+            window.AudioContext || window.webkitAudioContext;
 
-        audioContext =
-            new (
-                window.AudioContext ||
-                window.webkitAudioContext
-            )();
-
+        audioContext = new AudioContextClass({
+            latencyHint: "interactive"
+        });
     }
 
     return audioContext;
-
 }
 
+function preloadSounds() {
+    if (loadPromise) return loadPromise;
 
-/* ==========================================
-   音声ファイルをメモリへ読み込む
-========================================== */
+    loadPromise = (async () => {
+        const context = getAudioContext();
 
-async function loadSound() {
+        const entries = await Promise.all(
+            Object.entries(SOUND_PATHS).map(async ([name, path]) => {
+                const response = await fetch(path);
 
-    if (audioBuffer) {
+                if (!response.ok) {
+                    throw new Error("音声ファイルが見つかりません: " + path);
+                }
 
-        return true;
+                const data = await response.arrayBuffer();
+                return [name, await context.decodeAudioData(data)];
+            })
+        );
 
+        audioBuffers = Object.fromEntries(entries);
+    })();
+
+    loadPromise.catch(error => {
+        console.error(error);
+        loadPromise = null;
+        updateStatus("音声ファイルを確認してください");
+    });
+
+    return loadPromise;
+}
+
+function updateStatus(message = null) {
+    if (message) {
+        statusElement.textContent = message;
+        statusElement.classList.remove("playing", "locked");
+        return;
     }
 
+    const one = horns.horn1.pressed;
+    const two = horns.horn2.pressed;
+
+    statusElement.classList.remove("locked", "playing");
+
+    if (one && two) {
+        statusElement.textContent = "● 両方のホーン 吹鳴中";
+        statusElement.classList.add("playing");
+    } else if (one) {
+        statusElement.textContent = "● 1つ目のホーン 吹鳴中";
+        statusElement.classList.add("playing");
+    } else if (two) {
+        statusElement.textContent = "● 2つ目のホーン 吹鳴中";
+        statusElement.classList.add("playing");
+    } else if (endSources.size > 0) {
+        statusElement.textContent = "終了音 再生中";
+        statusElement.classList.add("playing");
+    } else {
+        statusElement.textContent = "READY";
+    }
+}
+
+async function startHorn(type) {
+    const horn = horns[type];
+
+    if (horn.pressed) return;
+
+    horn.pressed = true;
+    const button = type === "horn1" ? horn1Button : horn2Button;
+    button.classList.add("active");
+    updateStatus();
 
     try {
+        const context = getAudioContext();
 
-        const response =
-            await fetch(
-                SOUND_FILE
-            );
+        await preloadSounds();
 
+        if (!horn.pressed) return;
 
-        if (!response.ok) {
-
-            throw new Error(
-                "音声ファイルを読み込めません"
-            );
-
+        if (context.state !== "running") {
+            await context.resume();
         }
 
+        if (!horn.pressed) return;
 
-        const arrayBuffer =
-            await response.arrayBuffer();
+        const source = context.createBufferSource();
+        source.buffer = audioBuffers[type];
+        source.connect(context.destination);
 
+        horn.source = source;
 
-        const ctx =
-            getAudioContext();
+        source.onended = () => {
+            if (horn.source === source) horn.source = null;
+            try { source.disconnect(); } catch (_) {}
+        };
 
-
-        audioBuffer =
-            await ctx.decodeAudioData(
-                arrayBuffer
-            );
-
-
-        return true;
-
-    }
-
-    catch (error) {
-
+        source.start(0);
+    } catch (error) {
         console.error(error);
-
-        status.textContent =
-            "音声ファイルを確認してください";
-
-        return false;
-
+        stopHorn(type);
+        updateStatus("音声を再生できませんでした");
     }
-
 }
 
+function stopHorn(type) {
+    const horn = horns[type];
 
-/* ==========================================
-   ホーン開始
-========================================== */
+    if (!horn.pressed) return;
 
-async function startHorn() {
+    horn.pressed = false;
 
-    if (isPressed) {
+    const button = type === "horn1" ? horn1Button : horn2Button;
+    button.classList.remove("active");
 
-        return;
+    if (horn.source) {
+        const source = horn.source;
+        horn.source = null;
+        source.onended = null;
 
+        try { source.stop(); } catch (_) {}
+        try { source.disconnect(); } catch (_) {}
     }
 
+    updateStatus();
 
-    isPressed = true;
-
-
-    button.classList.add(
-        "pressed"
-    );
-
-
-    status.classList.add(
-        "playing"
-    );
-
-    status.textContent =
-        "● 吹鳴中";
-
-
-    const ctx =
-        getAudioContext();
-
-
-    /*
-        iPhone / iPadなどで
-        AudioContextが停止状態の場合
-        ここで復帰
-    */
-
-    if (
-        ctx.state ===
-        "suspended"
-    ) {
-
-        await ctx.resume();
-
+    if (type === "horn2") {
+        playEndSound();
     }
+}
 
+async function playEndSound() {
+    try {
+        const context = getAudioContext();
 
-    /*
-        音声がまだ読み込まれていない場合
-        読み込む
-    */
+        await preloadSounds();
 
-    const loaded =
-        await loadSound();
+        if (context.state !== "running") {
+            await context.resume();
+        }
 
+        const source = context.createBufferSource();
+        source.buffer = audioBuffers.end;
+        source.connect(context.destination);
 
-    if (!loaded) {
+        endSources.add(source);
 
-        stopHorn();
+        source.onended = () => {
+            endSources.delete(source);
+            try { source.disconnect(); } catch (_) {}
+            updateStatus();
+        };
 
-        return;
-
+        source.start(0);
+        updateStatus();
+    } catch (error) {
+        console.error(error);
+        updateStatus("終了音を読み込めませんでした");
     }
+}
 
-
-    /*
-        念のため既存音声を停止
-    */
-
-    if (sourceNode) {
+function setupButton(button, type) {
+    button.addEventListener("pointerdown", event => {
+        event.preventDefault();
 
         try {
+            button.setPointerCapture(event.pointerId);
+        } catch (_) {}
 
-            sourceNode.stop();
+        startHorn(type);
+    });
 
-        }
+    const release = event => {
+        if (event) event.preventDefault();
+        stopHorn(type);
+    };
 
-        catch (e) {}
-
-    }
-
-
-    /*
-        新しい再生ノード
-    */
-
-    sourceNode =
-        ctx.createBufferSource();
-
-
-    sourceNode.buffer =
-        audioBuffer;
-
-
-    sourceNode.connect(
-        ctx.destination
-    );
-
-
-    /*
-        即時再生
-    */
-
-    sourceNode.start(
-        0
-    );
-
+    button.addEventListener("pointerup", release);
+    button.addEventListener("pointercancel", release);
+    button.addEventListener("lostpointercapture", release);
 }
 
-
-/* ==========================================
-   ホーン停止
-========================================== */
-
-function stopHorn() {
-
-    if (!isPressed) {
-
-        return;
-
+window.addEventListener("pointerup", () => {
+    for (const type of Object.keys(horns)) {
+        stopHorn(type);
     }
+});
 
-
-    isPressed = false;
-
-
-    /*
-        音声停止
-    */
-
-    if (sourceNode) {
-
-        try {
-
-            sourceNode.stop();
-
-        }
-
-        catch (e) {}
-
-        sourceNode = null;
-
+window.addEventListener("blur", () => {
+    for (const type of Object.keys(horns)) {
+        stopHorn(type);
     }
+    heldKeys.clear();
+});
 
-
-    /*
-        UI
-    */
-
-    button.classList.remove(
-        "pressed"
-    );
-
-
-    status.classList.remove(
-        "playing"
-    );
-
-    status.textContent =
-        "READY";
-
+function isTypingTarget(target) {
+    return target instanceof HTMLElement &&
+        (target.isContentEditable ||
+         ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
 }
 
+window.addEventListener("keydown", event => {
+    if (isTypingTarget(event.target)) return;
 
-/* ==========================================
-   マウス
-========================================== */
+    let type = null;
 
-button.addEventListener(
-    "mousedown",
-    event => {
-
+    if (event.code === "Backspace") {
+        type = "horn1";
         event.preventDefault();
-
-        startHorn();
-
+    } else if (event.code === "KeyB") {
+        type = "horn2";
     }
-);
 
+    if (!type || event.repeat || heldKeys.has(event.code)) return;
 
-button.addEventListener(
-    "mouseup",
-    event => {
+    heldKeys.add(event.code);
+    startHorn(type);
+});
 
+window.addEventListener("keyup", event => {
+    let type = null;
+
+    if (event.code === "Backspace") {
+        type = "horn1";
         event.preventDefault();
-
-        stopHorn();
-
+    } else if (event.code === "KeyB") {
+        type = "horn2";
     }
-);
 
+    if (!type) return;
 
-button.addEventListener(
-    "mouseleave",
-    () => {
+    heldKeys.delete(event.code);
+    stopHorn(type);
+});
 
-        stopHorn();
+setupButton(horn1Button, "horn1");
+setupButton(horn2Button, "horn2");
 
-    }
-);
-
-
-/* ==========================================
-   タッチ
-========================================== */
-
-button.addEventListener(
-    "touchstart",
-    event => {
-
-        event.preventDefault();
-
-        startHorn();
-
-    },
-    {
-        passive: false
-    }
-);
-
-
-button.addEventListener(
-    "touchend",
-    event => {
-
-        event.preventDefault();
-
-        stopHorn();
-
-    },
-    {
-        passive: false
-    }
-);
-
-
-button.addEventListener(
-    "touchcancel",
-    event => {
-
-        event.preventDefault();
-
-        stopHorn();
-
-    },
-    {
-        passive: false
-    }
-);
-
-
-/* ==========================================
-   ウィンドウからフォーカスが外れた
-========================================== */
-
-window.addEventListener(
-    "blur",
-    () => {
-
-        stopHorn();
-
-    }
-);
-
-
-/* ==========================================
-   スペースキー
-========================================== */
-
-document.addEventListener(
-    "keydown",
-    event => {
-
-        if (
-            event.code !== "Space"
-        ) {
-
-            return;
-
-        }
-
-
-        if (
-            event.repeat
-        ) {
-
-            return;
-
-        }
-
-
-        event.preventDefault();
-
-        startHorn();
-
-    }
-);
-
-
-document.addEventListener(
-    "keyup",
-    event => {
-
-        if (
-            event.code !== "Space"
-        ) {
-
-            return;
-
-        }
-
-
-        event.preventDefault();
-
-        stopHorn();
-
-    }
-);
-
+window.addEventListener("load", () => {
+    preloadSounds().catch(console.error);
+});
 </script>
-
-
 </body>
 </html>
