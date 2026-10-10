@@ -145,19 +145,18 @@
 
     <div class="buttons">
         <button id="horn1Button" class="horn-button" type="button">
-            <span class="button-title">1つ目のホーン</span>
-            <span class="key-hint">押している間だけ鳴る / Backspace</span>
+            <span class="button-title">メロディ</span>
+            <span class="key-hint">Backspace</span>
         </button>
 
         <button id="horn2Button" class="horn-button secondary" type="button">
-            <span class="button-title">2つ目のホーン</span>
-            <span class="key-hint">離すと終了音 / B</span>
+            <span class="button-title">空気</span>
+            <span class="key-hint">B</span>
         </button>
     </div>
 
     <div class="help">
         ボタンまたは対応するキーを押している間、ホーンが鳴ります。<br>
-        2つ目は終了音が鳴り終わるまで再操作できません。
     </div>
 </div>
 
@@ -170,22 +169,11 @@ const SOUND_PATHS = {
     end: "sounds/end.mp3"
 };
 
-/* 音量設定：必要なら数値を調整 */
-const HORN_VOLUMES = {
-    horn1: 0.35,
-    horn2: 0.20,
-    end: 0.25
-};
-
-/* 同時再生時の全体音量を抑える */
-const MASTER_VOLUME = 0.75;
-
 const statusElement = document.getElementById("status");
 const horn1Button = document.getElementById("horn1Button");
 const horn2Button = document.getElementById("horn2Button");
 
 let audioContext = null;
-let masterGain = null;
 let audioBuffers = {};
 let loadPromise = null;
 
@@ -195,24 +183,16 @@ const horns = {
 };
 
 const heldKeys = new Set();
-const endSources = new Set();
+let endSources = new Set();
 
 function getAudioContext() {
     if (!audioContext) {
         const AudioContextClass =
             window.AudioContext || window.webkitAudioContext;
 
-        if (!AudioContextClass) {
-            throw new Error("Web Audio APIに対応していません");
-        }
-
         audioContext = new AudioContextClass({
             latencyHint: "interactive"
         });
-
-        masterGain = audioContext.createGain();
-        masterGain.gain.value = MASTER_VOLUME;
-        masterGain.connect(audioContext.destination);
     }
 
     return audioContext;
@@ -222,23 +202,18 @@ function preloadSounds() {
     if (loadPromise) return loadPromise;
 
     loadPromise = (async () => {
-        getAudioContext();
+        const context = getAudioContext();
 
         const entries = await Promise.all(
             Object.entries(SOUND_PATHS).map(async ([name, path]) => {
                 const response = await fetch(path);
 
                 if (!response.ok) {
-                    throw new Error(
-                        "音声ファイルが見つかりません: " + path
-                    );
+                    throw new Error("音声ファイルが見つかりません: " + path);
                 }
 
                 const data = await response.arrayBuffer();
-                const buffer =
-                    await audioContext.decodeAudioData(data);
-
-                return [name, buffer];
+                return [name, await context.decodeAudioData(data)];
             })
         );
 
@@ -252,20 +227,6 @@ function preloadSounds() {
     });
 
     return loadPromise;
-}
-
-/* 音量ノードを経由して再生する */
-function playBuffer(name) {
-    const source = audioContext.createBufferSource();
-    const gain = audioContext.createGain();
-
-    source.buffer = audioBuffers[name];
-    gain.gain.value = HORN_VOLUMES[name];
-
-    source.connect(gain);
-    gain.connect(masterGain);
-
-    return { source, gain };
 }
 
 function updateStatus(message = null) {
@@ -284,13 +245,10 @@ function updateStatus(message = null) {
         statusElement.textContent = "● 両方のホーン 吹鳴中";
         statusElement.classList.add("playing");
     } else if (one) {
-        statusElement.textContent = "● 1つ目のホーン 吹鳴中";
+        statusElement.textContent = "● メロディ 吹鳴中";
         statusElement.classList.add("playing");
     } else if (two) {
-        statusElement.textContent = "● 2つ目のホーン 吹鳴中";
-        statusElement.classList.add("playing");
-    } else if (endSources.size > 0) {
-        statusElement.textContent = "終了音 再生中";
+        statusElement.textContent = "● 空気 吹鳴中";
         statusElement.classList.add("playing");
     } else {
         statusElement.textContent = "READY";
@@ -303,10 +261,7 @@ async function startHorn(type) {
     if (horn.pressed) return;
 
     horn.pressed = true;
-
-    const button =
-        type === "horn1" ? horn1Button : horn2Button;
-
+    const button = type === "horn1" ? horn1Button : horn2Button;
     button.classList.add("active");
     updateStatus();
 
@@ -323,21 +278,18 @@ async function startHorn(type) {
 
         if (!horn.pressed) return;
 
-        const { source, gain } = playBuffer(type);
+        const source = context.createBufferSource();
+        source.buffer = audioBuffers[type];
+        source.connect(context.destination);
 
         horn.source = source;
 
         source.onended = () => {
-            if (horn.source === source) {
-                horn.source = null;
-            }
-
+            if (horn.source === source) horn.source = null;
             try { source.disconnect(); } catch (_) {}
-            try { gain.disconnect(); } catch (_) {}
         };
 
         source.start(0);
-
     } catch (error) {
         console.error(error);
         stopHorn(type);
@@ -352,9 +304,7 @@ function stopHorn(type) {
 
     horn.pressed = false;
 
-    const button =
-        type === "horn1" ? horn1Button : horn2Button;
-
+    const button = type === "horn1" ? horn1Button : horn2Button;
     button.classList.remove("active");
 
     if (horn.source) {
@@ -368,7 +318,6 @@ function stopHorn(type) {
 
     updateStatus();
 
-    /* 2つ目だけ、離したときに終了音 */
     if (type === "horn2") {
         playEndSound();
     }
@@ -384,25 +333,23 @@ async function playEndSound() {
             await context.resume();
         }
 
-        const { source, gain } = playBuffer("end");
+        const source = context.createBufferSource();
+        source.buffer = audioBuffers.end;
+        source.connect(context.destination);
 
         endSources.add(source);
 
         source.onended = () => {
             endSources.delete(source);
-
             try { source.disconnect(); } catch (_) {}
-            try { gain.disconnect(); } catch (_) {}
-
             updateStatus();
         };
 
         source.start(0);
         updateStatus();
-
     } catch (error) {
         console.error(error);
-        updateStatus("終了音を再生できませんでした");
+        updateStatus("終了音を読み込めませんでした");
     }
 }
 
@@ -427,27 +374,25 @@ function setupButton(button, type) {
     button.addEventListener("lostpointercapture", release);
 }
 
-/* 画面外で離してもホーンを止める */
 window.addEventListener("pointerup", () => {
-    stopHorn("horn1");
-    stopHorn("horn2");
+    for (const type of Object.keys(horns)) {
+        stopHorn(type);
+    }
 });
 
 window.addEventListener("blur", () => {
-    stopHorn("horn1");
-    stopHorn("horn2");
+    for (const type of Object.keys(horns)) {
+        stopHorn(type);
+    }
     heldKeys.clear();
 });
 
 function isTypingTarget(target) {
     return target instanceof HTMLElement &&
-        (
-            target.isContentEditable ||
-            ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)
-        );
+        (target.isContentEditable ||
+         ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
 }
 
-/* Backspace：1つ目、B：2つ目 */
 window.addEventListener("keydown", event => {
     if (isTypingTarget(event.target)) return;
 
@@ -460,9 +405,7 @@ window.addEventListener("keydown", event => {
         type = "horn2";
     }
 
-    if (!type || event.repeat || heldKeys.has(event.code)) {
-        return;
-    }
+    if (!type || event.repeat || heldKeys.has(event.code)) return;
 
     heldKeys.add(event.code);
     startHorn(type);
@@ -484,7 +427,6 @@ window.addEventListener("keyup", event => {
     stopHorn(type);
 });
 
-/* 初期化 */
 setupButton(horn1Button, "horn1");
 setupButton(horn2Button, "horn2");
 
